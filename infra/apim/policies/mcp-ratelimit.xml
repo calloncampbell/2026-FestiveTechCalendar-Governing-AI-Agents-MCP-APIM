@@ -9,7 +9,7 @@
         <!-- Beat 4a: throttle per trusted identity (JWT oid, else subscription id), never a client-supplied header.
              https://learn.microsoft.com/azure/api-management/rate-limit-by-key-policy -->
         <rate-limit-by-key calls="5" renewal-period="60" counter-key="@{
-            var jwt = context.Variables.GetValueOrDefault<Jwt>("jwt");
+            var jwt = context.Variables.ContainsKey("jwt") ? (Jwt)context.Variables["jwt"] : null;
             var fallback = context.Subscription?.Id ?? "anonymous";
             return jwt != null ? jwt.Claims.GetValueOrDefault("oid", fallback) : fallback;
         }" remaining-calls-variable-name="remainingCalls" />
