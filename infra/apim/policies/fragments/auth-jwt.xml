@@ -1,0 +1,15 @@
+<fragment>
+    <!-- Invariant base (identity): project managed identity token, validated by APIM.
+         https://learn.microsoft.com/azure/api-management/validate-jwt-policy -->
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Santa's list says you are not an elf." output-token-variable-name="jwt">
+        <openid-config url="https://login.microsoftonline.com/{{tenantId}}/v2.0/.well-known/openid-configuration" />
+        <audiences>
+            <audience>{{jwtAudience}}</audience>
+        </audiences>
+        <required-claims>
+            <claim name="roles" match="any">
+                <value>{{jwtRequiredRole}}</value>
+            </claim>
+        </required-claims>
+    </validate-jwt>
+</fragment>

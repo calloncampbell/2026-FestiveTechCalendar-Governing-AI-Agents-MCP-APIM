@@ -1,0 +1,37 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- Invariant base: auth + backend routing (never removed by beat toggles) -->
+        <include-fragment fragment-id="santa-mcp-base" />
+        <set-header name="x-functions-key" exists-action="override">
+            <value>{{__KEY_NV__}}</value>
+        </set-header>
+        <!-- Beat 4a: throttle per trusted identity (JWT oid, else subscription id), never a client-supplied header.
+             https://learn.microsoft.com/azure/api-management/rate-limit-by-key-policy -->
+        <rate-limit-by-key calls="5" renewal-period="60" counter-key="@{
+            var jwt = context.Variables.GetValueOrDefault<Jwt>("jwt");
+            var fallback = context.Subscription?.Id ?? "anonymous";
+            return jwt != null ? jwt.Claims.GetValueOrDefault("oid", fallback) : fallback;
+        }" remaining-calls-variable-name="remainingCalls" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <choose>
+            <when condition="@(context.Response.StatusCode == 429)">
+                <return-response>
+                    <set-status code="429" reason="Too Many Requests" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>{"error":"Coal in your stocking! Too many requests, little elf. Wait a minute and try again."}</set-body>
+                </return-response>
+            </when>
+        </choose>
+        <base />
+    </on-error>
+</policies>

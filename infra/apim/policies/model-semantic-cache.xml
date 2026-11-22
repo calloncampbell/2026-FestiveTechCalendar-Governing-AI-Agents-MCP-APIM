@@ -1,0 +1,29 @@
+<policies>
+    <inbound>
+        <base />
+        <include-fragment fragment-id="santa-model-base" />
+        <!-- Auth (subscription) and content safety come BEFORE the cache lookup so cached answers are never served to blocked/anonymous callers. -->
+        <llm-content-safety backend-id="content-safety-backend" shield-prompt="true">
+            <categories output-type="FourSeverityLevels">
+                <category name="Hate" threshold="2" />
+                <category name="Violence" threshold="2" />
+            </categories>
+        </llm-content-safety>
+        <!-- Beat 4d (optional, enableSemanticCache=true): read-only, single-turn prompts only.
+             Cache is partitioned by caller identity (subscription id).
+             https://learn.microsoft.com/azure/api-management/llm-semantic-cache-lookup-policy -->
+        <llm-semantic-cache-lookup score-threshold="0.8" embeddings-backend-id="embeddings-backend" embeddings-backend-auth="system-assigned" ignore-system-messages="true" max-message-count="10">
+            <vary-by>@(context.Subscription.Id)</vary-by>
+        </llm-semantic-cache-lookup>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <llm-semantic-cache-store duration="120" />
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

@@ -1,0 +1,25 @@
+<policies>
+    <inbound>
+        <base />
+        <include-fragment fragment-id="santa-model-base" />
+        <!-- Beat 4c: Prompt Shields. Runs after auth, before any cache lookup.
+             Rehearsed attack: see docs/demo-script.md (user-prompt injection, e.g. "Ignore all previous instructions ...").
+             Backend 'content-safety-backend' uses APIM managed identity (Cognitive Services User role).
+             https://learn.microsoft.com/azure/api-management/llm-content-safety-policy -->
+        <llm-content-safety backend-id="content-safety-backend" shield-prompt="true">
+            <categories output-type="FourSeverityLevels">
+                <category name="Hate" threshold="2" />
+                <category name="Violence" threshold="2" />
+            </categories>
+        </llm-content-safety>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

@@ -1,0 +1,11 @@
+<fragment>
+    <!-- Invariant base for the model API: managed identity to Foundry, backend routing, token metrics.
+         https://learn.microsoft.com/azure/api-management/llm-emit-token-metric-policy -->
+    <authentication-managed-identity resource="https://cognitiveservices.azure.com" />
+    <set-backend-service backend-id="foundry-backend" />
+    <llm-emit-token-metric namespace="santa-workshop">
+        <dimension name="Subscription ID" />
+        <dimension name="API ID" />
+        <dimension name="Elf" value="@(context.Subscription?.Name ?? "anonymous")" />
+    </llm-emit-token-metric>
+</fragment>
