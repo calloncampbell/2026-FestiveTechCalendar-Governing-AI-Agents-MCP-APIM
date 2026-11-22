@@ -1,0 +1,12 @@
+// Gateway requests for the demo APIs: confirm agent inference reaches APIM (santa-model) and MCP tool calls
+requests
+| where timestamp > ago(1h)
+| where cloud_RoleName has "apim" or url has "azure-api.net"
+| extend api = case(
+    url has "/santa-model", "model",
+    url has "/naughty-nice-mcp", "mcp-naughty-nice",
+    url has "/sleigh-mcp", "mcp-sleigh",
+    url has "/santa-existing-mcp", "mcp-existing",
+    "other")
+| summarize calls = count(), p95_ms = percentile(duration, 95), failures = countif(success == false) by api, resultCode
+| order by calls desc

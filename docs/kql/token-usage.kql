@@ -1,0 +1,7 @@
+// Custom metrics emitted by llm-emit-token-metric (namespace: santa-workshop), by subscription
+customMetrics
+| where timestamp > ago(1h)
+| where customDimensions["API ID"] != "" or name in ("Total Tokens", "Prompt Tokens", "Completion Tokens")
+| extend subscription = tostring(customDimensions["Subscription ID"]), api = tostring(customDimensions["API ID"])
+| summarize tokens = sum(valueSum) by name, subscription, api, bin(timestamp, 5m)
+| order by timestamp desc
