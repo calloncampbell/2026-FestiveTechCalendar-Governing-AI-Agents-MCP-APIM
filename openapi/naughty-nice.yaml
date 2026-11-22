@@ -1,0 +1,168 @@
+openapi: 3.0.3
+info:
+  title: Naughty or Nice API
+  version: 1.0.0
+  description: >-
+    Santa's official Naughty-or-Nice list. Look up whether a child is on the Nice list, Naughty list,
+    or still Undecided, browse the list page by page, and submit a (simulated) review.
+    Data is deterministic demo data. Write operations are simulated and never change stored data.
+servers:
+  # Replace with your Function App URL (APIM import overrides this with the APIM API URL).
+  - url: https://func-santa-REPLACE.azurewebsites.net/api
+security:
+  - functionKey: []
+paths:
+  /kids/{name}:
+    get:
+      operationId: getKidByName
+      summary: Get one child's Nice/Naughty status by name
+      description: >-
+        Use this FIRST whenever you need to know if a specific child is on the Nice list.
+        Accepts a first name ("Timmy") or a full name ("Timmy Thompson"), case-insensitive.
+        Returns the child's id (needed for scheduling deliveries), status (Nice, Naughty or Undecided),
+        niceScore (0-100), city and region. Returns 404 if the child is unknown.
+        Read-only and safe to call repeatedly.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Child's first name or full name, e.g. Timmy or "Timmy Thompson".
+          schema: { type: string }
+      responses:
+        "200":
+          description: The child.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Kid" }
+        "404":
+          description: No child with that name.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /kids:
+    get:
+      operationId: listKids
+      summary: List children, optionally filtered by status (paged)
+      description: >-
+        Browse the list one page at a time. Use ONLY when the user asks for a group of children
+        (for example "who is on the Naughty list"); prefer getKidByName for a single child.
+        Results are paged: pageSize is capped at 50 and the list has about 10,000 children, so never try
+        to read everything. Use the returned total to tell the user how many exist.
+        Read-only.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by list status.
+          schema: { type: string, enum: [Nice, Naughty, Undecided] }
+        - name: page
+          in: query
+          required: false
+          description: 1-based page number. Default 1.
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page, 1-50. Default 20.
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: One page of children.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KidPage" }
+        "400":
+          description: Invalid status filter.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /kids/{id}/review:
+    post:
+      operationId: submitReview
+      summary: Submit a (simulated) list-status review for ONE child
+      description: >-
+        WRITE operation, requires human approval. Records a review decision (Nice or Naughty) for a single child
+        identified by id (for example kid-00001) with a written reason of at least 10 characters.
+        The call is simulated: it returns a confirmation with a deterministic reviewId but changes nothing.
+        Business rule: a child currently on the Naughty list can NEVER be promoted to Nice through this API;
+        such requests return 409. Never call this in bulk.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Child id such as kid-00001 (from getKidByName).
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewRequest" }
+      responses:
+        "200":
+          description: Review accepted (simulated).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewResult" }
+        "400":
+          description: Invalid decision or reason.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Unknown child id.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Rejected by business rule (Naughty to Nice needs Santa's manual approval).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewResult" }
+components:
+  securitySchemes:
+    functionKey:
+      type: apiKey
+      in: header
+      name: x-functions-key
+  schemas:
+    Kid:
+      type: object
+      properties:
+        id: { type: string, example: kid-00001 }
+        name: { type: string, example: Timmy Thompson }
+        firstName: { type: string, example: Timmy }
+        age: { type: integer, example: 8 }
+        city: { type: string, example: Toronto }
+        region: { type: string, enum: [NA-EAST, NA-WEST, EUROPE, APAC] }
+        status: { type: string, enum: [Nice, Naughty, Undecided] }
+        niceScore: { type: integer, minimum: 0, maximum: 100 }
+        notes: { type: string }
+    KidPage:
+      type: object
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer, description: Total children matching the filter. }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Kid" }
+    ReviewRequest:
+      type: object
+      required: [decision, reason]
+      properties:
+        decision: { type: string, enum: [Nice, Naughty] }
+        reason: { type: string, minLength: 10 }
+    ReviewResult:
+      type: object
+      properties:
+        reviewId: { type: string }
+        kidId: { type: string }
+        decision: { type: string }
+        accepted: { type: boolean }
+        message: { type: string }
+        simulated: { type: boolean }
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }

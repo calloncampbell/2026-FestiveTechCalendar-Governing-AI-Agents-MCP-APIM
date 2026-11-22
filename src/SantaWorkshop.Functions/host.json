@@ -1,0 +1,18 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  },
+  "extensions": {
+    "mcp": {
+      "serverName": "santa-workshop-native-mcp",
+      "serverVersion": "1.0.0",
+      "instructions": "Santa's Workshop tools. Look up a child's nice/naughty status and check delivery slots. Writes are simulated."
+    }
+  }
+}

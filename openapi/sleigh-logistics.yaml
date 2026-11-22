@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: Sleigh Logistics API
+  version: 1.0.0
+  description: >-
+    Christmas Eve sleigh delivery scheduling. Find delivery slots by region and schedule a gift delivery
+    for a child who is on the Nice list. Data is deterministic demo data; deliveries are simulated and stateless.
+servers:
+  - url: https://func-santa-REPLACE.azurewebsites.net/api
+security:
+  - functionKey: []
+paths:
+  /slots:
+    get:
+      operationId: listSlots
+      summary: List Christmas Eve delivery slots, optionally by region
+      description: >-
+        Returns delivery slots for 2026-12-24 (slotId such as NAE-2). A child can only be scheduled into a slot whose
+        region matches the child's region (NA-EAST, NA-WEST, EUROPE, APAC), so pass the region from the
+        child's record. Read-only.
+      parameters:
+        - name: region
+          in: query
+          required: false
+          description: Region filter.
+          schema: { type: string, enum: [NA-EAST, NA-WEST, EUROPE, APAC] }
+        - name: pageSize
+          in: query
+          required: false
+          description: Maximum slots to return, 1-50. Default 50.
+          schema: { type: integer, minimum: 1, maximum: 50, default: 50 }
+      responses:
+        "200":
+          description: Slots.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SlotList" }
+  /deliveries:
+    post:
+      operationId: scheduleDelivery
+      summary: Schedule a gift delivery for ONE child (simulated)
+      description: >-
+        WRITE operation, requires human approval. Schedules a delivery for a single child (kidId from the
+        Naughty-or-Nice API) into a slot (slotId from listSlots). Rules: the child must be on the Nice list
+        (otherwise 409 not_on_nice_list, coal rules apply) and the slot region must match the child's region
+        (409 region_mismatch). Simulated: returns a deterministic deliveryId and persists nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeliveryRequest" }
+      responses:
+        "201":
+          description: Delivery scheduled (simulated).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Delivery" }
+        "400":
+          description: Missing kidId or slotId.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Unknown kid or slot.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Business rule violation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /deliveries/{id}:
+    get:
+      operationId: getDelivery
+      summary: Get a scheduled delivery by id
+      description: >-
+        Looks up a delivery by deliveryId (for example del-00001-NAE-2) returned from scheduleDelivery.
+        Read-only. Returns 404 for malformed or unknown ids.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+          description: Delivery id.
+      responses:
+        "200":
+          description: The delivery.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Delivery" }
+        "404":
+          description: Unknown delivery.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+components:
+  securitySchemes:
+    functionKey:
+      type: apiKey
+      in: header
+      name: x-functions-key
+  schemas:
+    Slot:
+      type: object
+      properties:
+        slotId: { type: string, example: NAE-2 }
+        region: { type: string }
+        date: { type: string, example: "2026-12-24" }
+        window: { type: string, example: 22:00-00:00 local }
+        capacity: { type: integer }
+    SlotList:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Slot" }
+    DeliveryRequest:
+      type: object
+      required: [kidId, slotId]
+      properties:
+        kidId: { type: string, example: kid-00001 }
+        slotId: { type: string, example: NAE-2 }
+    Delivery:
+      type: object
+      properties:
+        deliveryId: { type: string, example: del-00001-NAE-2 }
+        kidId: { type: string }
+        kidName: { type: string }
+        slotId: { type: string }
+        date: { type: string }
+        window: { type: string }
+        status: { type: string, example: Scheduled }
+        simulated: { type: boolean }
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
