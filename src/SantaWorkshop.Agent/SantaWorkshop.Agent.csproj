@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SantaWorkshop.Agent</RootNamespace>
+    <!-- Foundry Responses/MCP types are marked experimental in the SDK. -->
+    <NoWarn>$(NoWarn);OPENAI001;AAIP001;AAIP002</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.AI.Projects" Version="3.0.0" />
+    <PackageReference Include="Azure.AI.Extensions.OpenAI" Version="3.0.0" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+  </ItemGroup>
+</Project>

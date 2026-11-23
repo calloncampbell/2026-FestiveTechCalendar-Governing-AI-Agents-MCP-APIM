@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: santa-workshop-agent
+metadata:
+  template: santa-workshop-agent@0.1.0
+infra:
+  provider: bicep
+  path: infra
+services:
+  functions:
+    project: ./src/SantaWorkshop.Functions
+    language: csharp
+    host: function
+hooks:
+  postdeploy:
+    # Copies the Function host key / MCP extension key into APIM secret named values (keys never live in the repo).
+    shell: pwsh
+    run: ./scripts/set-function-keys.ps1
+    continueOnError: false

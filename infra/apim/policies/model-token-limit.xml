@@ -1,0 +1,19 @@
+<policies>
+    <inbound>
+        <base />
+        <include-fragment fragment-id="santa-model-base" />
+        <!-- Beat 4b: per-subscription token budget.
+             tokens-per-minute exceeded => 429 (+ Retry-After). token-quota exceeded => 403.
+             https://learn.microsoft.com/azure/api-management/llm-token-limit-policy -->
+        <llm-token-limit counter-key="@(context.Subscription.Id)" tokens-per-minute="500" token-quota="20000" token-quota-period="Daily" estimate-prompt-tokens="true" remaining-tokens-header-name="x-remaining-tokens" tokens-consumed-header-name="x-tokens-consumed" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

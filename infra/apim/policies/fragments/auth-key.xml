@@ -1,0 +1,6 @@
+<fragment>
+    <!-- Invariant base (identity), fallback mode: the API requires a subscription key, which APIM
+         enforces before policies run (subscriptionRequired = true on the API).
+         The fragment keeps policy shape identical in both modes. -->
+    <set-variable name="authMode" value="subscription-key" />
+</fragment>

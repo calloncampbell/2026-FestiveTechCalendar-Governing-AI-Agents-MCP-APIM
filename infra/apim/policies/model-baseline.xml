@@ -1,0 +1,16 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- Invariant base: managed identity to Foundry, backend routing, token metrics -->
+        <include-fragment fragment-id="santa-model-base" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

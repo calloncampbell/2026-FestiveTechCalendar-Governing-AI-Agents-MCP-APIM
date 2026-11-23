@@ -1,0 +1,11 @@
+// Throttled (429), token-quota (403) and blocked calls
+requests
+| where timestamp > ago(1h)
+| where resultCode in ("401", "403", "429")
+| extend reason = case(
+    resultCode == "401", "no/invalid identity",
+    resultCode == "429", "rate or token-rate limit (coal in your stocking)",
+    resultCode == "403", "token quota or content safety block",
+    "other")
+| summarize hits = count() by resultCode, reason, name, bin(timestamp, 1m)
+| order by timestamp desc

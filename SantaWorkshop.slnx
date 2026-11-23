@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SantaWorkshop.Agent/SantaWorkshop.Agent.csproj" />
+    <Project Path="src/SantaWorkshop.Functions/SantaWorkshop.Functions.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SantaWorkshop.Functions.Tests/SantaWorkshop.Functions.Tests.csproj" />
+  </Folder>
+</Solution>
