@@ -22,7 +22,7 @@ public sealed class SleighLogisticsFunctions(WorkshopStore store)
     [Function("ScheduleDelivery")]
     public IActionResult ScheduleDelivery(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "deliveries")] HttpRequest req,
-        [FromBody] DeliveryRequest? body)
+        [Microsoft.Azure.Functions.Worker.Http.FromBody] DeliveryRequest? body)
     {
         if (body is null || string.IsNullOrWhiteSpace(body.KidId) || string.IsNullOrWhiteSpace(body.SlotId))
         {

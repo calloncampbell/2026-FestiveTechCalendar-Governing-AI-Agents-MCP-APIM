@@ -6,6 +6,6 @@
     <llm-emit-token-metric namespace="santa-workshop">
         <dimension name="Subscription ID" />
         <dimension name="API ID" />
-        <dimension name="Elf" value="@(context.Subscription?.Name ?? "anonymous")" />
+        <dimension name="Elf" value='@(context.Subscription?.Name ?? "anonymous")' />
     </llm-emit-token-metric>
 </fragment>

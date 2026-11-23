@@ -1,8 +1,0 @@
-<fragment>
-    <!-- Invariant base for every MCP server: auth + backend routing to the Function App.
-         API-level policies add the right Functions key header.
-         No MCP policy may read or write context.Response.Body: that buffers the stream and breaks MCP.
-         https://learn.microsoft.com/azure/api-management/mcp-server-overview -->
-    <include-fragment fragment-id="santa-auth" />
-    <set-backend-service backend-id="santa-functions-backend" />
-</fragment>

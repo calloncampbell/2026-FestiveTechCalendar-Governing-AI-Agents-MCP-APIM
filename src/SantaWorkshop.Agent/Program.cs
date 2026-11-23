@@ -50,6 +50,16 @@ int Usage()
     return 2;
 }
 
+static McpTool CreateApimTool(string label, string url, string connectionId)
+{
+    McpTool tool = ResponseTool.CreateMcpTool(
+        serverLabel: label,
+        serverUri: new Uri(url),
+        toolCallApprovalPolicy: new McpToolCallApprovalPolicy(DefaultMcpToolCallApprovalPolicy.AlwaysRequireApproval));
+    tool.ProjectConnectionId = connectionId;
+    return tool;
+}
+
 int RunAgent(bool directMode, string userPrompt)
 {
     var credential = new DefaultAzureCredential();
@@ -58,29 +68,34 @@ int RunAgent(bool directMode, string userPrompt)
     // For the governed path the model must be the APIM connection model, e.g. "<apim-connection>/<model>",
     // so inference flows through APIM (token limits, content safety, cache, metrics).
     // https://learn.microsoft.com/azure/foundry/agents/how-to/ai-gateway
-    var model = directMode ? Env("DIRECT_MODEL", Env("AGENT_MODEL")) : Env("AGENT_MODEL");
+    var model = directMode ? Environment.GetEnvironmentVariable("DIRECT_MODEL") ?? Env("AGENT_MODEL") : Env("AGENT_MODEL");
 
-    McpTool tool;
+    List<McpTool> tools = [];
     if (directMode)
     {
         // Beat 1: ungoverned. Agent -> Function native MCP endpoint, no APIM in the path.
-        tool = ResponseTool.CreateMcpTool(
+        McpTool direct = ResponseTool.CreateMcpTool(
             serverLabel: "santa-direct",
             serverUri: new Uri(Env("DIRECT_MCP_URL")),
             toolCallApprovalPolicy: new McpToolCallApprovalPolicy(DefaultMcpToolCallApprovalPolicy.AlwaysRequireApproval));
-        tool.Headers["x-functions-key"] = Env("DIRECT_MCP_KEY");
+        direct.Headers["x-functions-key"] = Env("DIRECT_MCP_KEY");
+        tools.Add(direct);
     }
     else
     {
         // Governed: auth (project managed identity or subscription key) lives in the Foundry project connection.
-        tool = ResponseTool.CreateMcpTool(
-            serverLabel: "santa-apim",
-            serverUri: new Uri(Env("APIM_MCP_URL")),
-            toolCallApprovalPolicy: new McpToolCallApprovalPolicy(DefaultMcpToolCallApprovalPolicy.AlwaysRequireApproval));
-        tool.ProjectConnectionId = Env("APIM_MCP_CONNECTION");
+        // Naughty-Nice and Sleigh are separate MCP servers; the existing-MCP beat sets only APIM_MCP_URL.
+        var connection = Env("APIM_MCP_CONNECTION");
+        tools.Add(CreateApimTool("santa-naughty-nice", Env("APIM_MCP_URL"), connection));
+        var sleighUrl = Environment.GetEnvironmentVariable("APIM_SLEIGH_MCP_URL");
+        if (!string.IsNullOrWhiteSpace(sleighUrl))
+        {
+            var sleighConnection = Environment.GetEnvironmentVariable("APIM_SLEIGH_MCP_CONNECTION") ?? connection;
+            tools.Add(CreateApimTool("santa-sleigh", sleighUrl, sleighConnection));
+        }
     }
-
-    DeclarativeAgentDefinition definition = new(model: model) { Instructions = Instructions, Tools = { tool } };
+    DeclarativeAgentDefinition definition = new(model: model) { Instructions = Instructions };
+    foreach (var t in tools) { definition.Tools.Add(t); }
     ProjectsAgentVersion agent = project.AgentAdministrationClient.CreateAgentVersion(agentName: AgentName, options: new(definition));
 
     ProjectResponsesClient responses =

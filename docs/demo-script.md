@@ -29,14 +29,14 @@ $t = @{ ResourceGroup = "rg-santa-demo"; ApimName = "<apim name>" }   # azd env 
 ## Beat 2: REST API to MCP server
 
 - **Do (portal):** APIs > MCP Servers > Create > *Expose an API as an MCP server* > Naughty or Nice API; tick the three operations. (Pre-deployed by Bicep; show it rather than rebuilding.)
-- **Run:** `dotnet run --project src/SantaWorkshop.Agent -- mcp`
+- **Run:** set `APIM_MCP_URL` (Naughty-Nice) and `APIM_SLEIGH_MCP_URL` (Sleigh), then `dotnet run --project src/SantaWorkshop.Agent -- mcp`
 - **Expect:** tools `getKidByName`, `listKids`, `submitReview`, `listSlots`, `scheduleDelivery`, `getDelivery` discovered; `getKidByName("Timmy Thompson")` returns Nice/92; the console asks for **approval** before `scheduleDelivery` (answer `y`) and gets `del-00001-NAE-2`.
 - **Point:** operation descriptions in the OpenAPI are the agent's tool documentation; tool approval protects write tools.
 
 ## Beat 3 (bonus): existing MCP server behind APIM
 
 - **Show:** the Function exposes a native MCP endpoint (`get_kid_status`, `list_delivery_slots`) through the Functions MCP extension. APIM fronts it via *Expose an existing MCP server* (`/santa-existing-mcp/mcp`).
-- **Do:** `$env:APIM_MCP_URL = <existing MCP url>; dotnet run --project src/SantaWorkshop.Agent -- mcp "Which slots are free in EUROPE?"`
+- **Do:** `$env:APIM_SLEIGH_MCP_URL = $null; $env:APIM_MCP_URL = <existing MCP url>; dotnet run --project src/SantaWorkshop.Agent -- mcp "Which slots are free in EUROPE?"`
 - **Point:** same governance whether the MCP server is generated from REST or already exists.
 
 ## Beat 4: Policies

@@ -22,6 +22,22 @@ public class WorkshopStoreTests
     }
 
     [Fact]
+    public void ListKids_HugePageNumber_ReturnsEmptyPage()
+    {
+        var page = _store.ListKids(null, 42_949_674, 50);
+
+        Assert.Empty(page.Items);
+    }
+
+    [Theory]
+    [InlineData("del-00002-EUR-1")] // Naughty child
+    [InlineData("del-00001-EUR-1")] // wrong region
+    public void GetDelivery_RejectsIdsThatCouldNotBeScheduled(string id)
+    {
+        Assert.Null(_store.GetDelivery(id));
+    }
+
+    [Fact]
     public void Timmy_IsOnTheNiceList()
     {
         var kid = _store.FindKidByName("timmy");

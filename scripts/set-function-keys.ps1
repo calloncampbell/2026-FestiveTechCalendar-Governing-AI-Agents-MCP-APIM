@@ -11,7 +11,7 @@ if (-not ($rg -and $func -and $apim)) { throw 'Run via azd (needs AZURE_RESOURCE
 
 $keys = az functionapp keys list -g $rg -n $func -o json | ConvertFrom-Json
 $hostKey = $keys.functionKeys.default
-if (-not $hostKey) { $hostKey = $keys.masterKey }
+if (-not $hostKey) { throw "Function host key 'default' not found. Create one (az functionapp keys set --key-type functionKeys --key-name default) instead of using the master key." }
 $mcpKey = $keys.systemKeys.mcp_extension
 if (-not $mcpKey) { throw 'mcp_extension system key not found. Deploy the app first and make sure the host has started once.' }
 

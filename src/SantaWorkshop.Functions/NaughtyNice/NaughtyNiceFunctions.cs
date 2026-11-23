@@ -41,7 +41,7 @@ public sealed class NaughtyNiceFunctions(WorkshopStore store)
     public IActionResult SubmitReview(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "kids/{id}/review")] HttpRequest req,
         string id,
-        [FromBody] ReviewRequest? body)
+        [Microsoft.Azure.Functions.Worker.Http.FromBody] ReviewRequest? body)
     {
         var kid = store.GetKidById(id);
         if (kid is null)

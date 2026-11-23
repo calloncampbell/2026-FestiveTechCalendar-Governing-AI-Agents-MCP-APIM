@@ -1,8 +1,8 @@
 <policies>
     <inbound>
         <base />
-        <!-- Invariant base: auth + backend routing (never removed by beat toggles) -->
-        <include-fragment fragment-id="santa-mcp-base" />
+        <!-- Invariant base: auth (the service URL of each API routes to the Function App) (never removed by beat toggles) -->
+        <include-fragment fragment-id="santa-auth" />
         <set-header name="x-functions-key" exists-action="override">
             <value>{{__KEY_NV__}}</value>
         </set-header>

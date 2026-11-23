@@ -42,7 +42,7 @@ Create a **Flex Consumption** Function App (Linux, .NET 11 isolated) with a syst
 3. **Named values**: `tenantId`, `jwtAudience` (App ID URI of the gateway app registration), `jwtRequiredRole` (`Workshop.Invoke`), and secret `functionKey` / `mcpExtensionKey`.
 4. **Backends**: `santa-functions-backend` (`https://<func>.azurewebsites.net/api`), `foundry-backend` (`https://<foundry>.openai.azure.com/openai`), `content-safety-backend` (`https://<cs>.cognitiveservices.azure.com`, authorization credentials = **Managed identity**, resource ID `https://cognitiveservices.azure.com`).
 5. **Role assignments** for the APIM managed identity: *Cognitive Services User* on Content Safety; *Cognitive Services User* and *Cognitive Services OpenAI User* on the Foundry resource.
-6. **Policy fragments** (APIs > Policy fragments): create `santa-auth`, `santa-mcp-base`, `santa-model-base` from `infra/apim/policies/fragments/*.xml` (use `auth-jwt.xml`, or `auth-key.xml` in key mode).
+6. **Policy fragments** (APIs > Policy fragments): create `santa-auth`, `santa-model-base` from `infra/apim/policies/fragments/*.xml` (use `auth-jwt.xml`, or `auth-key.xml` in key mode).
 
 ### 2.3 REST API to MCP server
 1. APIs > **Add API > OpenAPI**: import `openapi/naughty-nice.yaml` (id `santa-naughty-nice`) and `openapi/sleigh-logistics.yaml` (id `santa-sleigh`). Set the backend/service URL to the Function App `/api`.
@@ -83,7 +83,7 @@ Reference: <https://learn.microsoft.com/azure/foundry/agents/how-to/tools/model-
 ### 3.3 Create the Elf agent in the portal
 1. Agents > **New agent** `santa-elf`, model `<connection>/<model>`.
 2. Instructions: *"You are an elf in Santa's workshop. Use the tools to check the nice list and schedule deliveries. Never guess; always call a tool. Never mark more than one child at a time."*
-3. Add tool > **MCP** > server URL = APIM MCP URL, connection from 3.2. Set **require approval = always** for write tools (`submitReview`, `scheduleDelivery`); never for reads.
+3. Add **two** MCP tools: the Naughty-Nice APIM MCP URL and the Sleigh APIM MCP URL (`mcpSleighUrl` output), each with its connection from 3.2. Set **require approval = always** for write tools (`submitReview`, `scheduleDelivery`); never for reads.
 4. Beat 1 only (ungoverned): add an **OpenAPI tool** pointing at the Function's OpenAPI (direct Function URL + function key). <https://learn.microsoft.com/azure/foundry/agents/how-to/tools/openapi> The console app's `direct` mode does the same via the Function's native MCP URL instead.
 
 ### 3.4 Console agent (code path)
@@ -94,7 +94,8 @@ Set env vars, then `dotnet run --project src/SantaWorkshop.Agent -- <mode> ["pro
 | `FOUNDRY_PROJECT_ENDPOINT` | all agent modes |
 | `AGENT_MODEL` | `mcp`, `injection` (`<apim-connection>/<model>`) |
 | `DIRECT_MODEL`, `DIRECT_MCP_URL`, `DIRECT_MCP_KEY` | `direct` |
-| `APIM_MCP_URL`, `APIM_MCP_CONNECTION` | `mcp`, `injection` |
+| `APIM_MCP_URL`, `APIM_MCP_CONNECTION` | `mcp`, `injection` (Naughty-Nice MCP server) |
+| `APIM_SLEIGH_MCP_URL`, `APIM_SLEIGH_MCP_CONNECTION` (defaults to `APIM_MCP_CONNECTION`) | `mcp`, `injection`: optional second MCP server, needed for the lookup-and-schedule prompt. Leave unset for the existing-MCP beat |
 | `APIM_SUBSCRIPTION_KEY` *or* `APIM_AUDIENCE` | `flood` (bounded burst; key or bearer token) |
 | `FLOOD_COUNT` | `flood` (default 30) |
 

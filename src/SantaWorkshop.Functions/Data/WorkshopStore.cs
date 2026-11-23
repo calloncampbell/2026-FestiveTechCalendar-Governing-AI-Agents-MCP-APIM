@@ -144,7 +144,10 @@ public sealed partial class WorkshopStore
         }
 
         var filtered = query.ToArray();
-        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToArray();
+        var offset = ((long)page - 1) * pageSize;
+        var items = offset >= filtered.Length
+            ? []
+            : filtered.Skip((int)offset).Take(pageSize).ToArray();
         return new PagedResult<Kid>(page, pageSize, filtered.Length, items);
     }
 
@@ -219,7 +222,8 @@ public sealed partial class WorkshopStore
 
         var kid = GetKidById($"kid-{m.Groups[1].Value}");
         var slot = GetSlot(m.Groups[2].Value);
-        return kid is null || slot is null ? null : ToDelivery(kid, slot);
+        // Only IDs that ScheduleDelivery could have produced are valid.
+        return kid is null || slot is null ? null : ScheduleDelivery(kid.Id, slot.SlotId).Delivery;
     }
 
     private static DeliveryResult ToDelivery(Kid kid, DeliverySlot slot) =>

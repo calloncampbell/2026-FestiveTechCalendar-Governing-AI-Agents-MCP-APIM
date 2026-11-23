@@ -182,16 +182,6 @@ resource fragAuth 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' =
   }
 }
 
-resource fragMcpBase 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
-  parent: apim
-  name: 'santa-mcp-base'
-  dependsOn: [ fragAuth, functionsBackend ]
-  properties: {
-    format: 'rawxml'
-    value: loadTextContent('../apim/policies/fragments/mcp-base.xml')
-  }
-}
-
 resource fragModelBase 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apim
   name: 'santa-model-base'
@@ -237,14 +227,14 @@ var mcpExistingBaselinePolicy = replace(loadTextContent('../apim/policies/mcp-ba
 resource naughtyNicePolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: naughtyNiceApi
   name: 'policy'
-  dependsOn: [ fragMcpBase, nvFunctionKey ]
+  dependsOn: [ fragAuth, nvFunctionKey ]
   properties: { format: 'rawxml', value: mcpBaselinePolicy }
 }
 
 resource sleighPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: sleighApi
   name: 'policy'
-  dependsOn: [ fragMcpBase, nvFunctionKey ]
+  dependsOn: [ fragAuth, nvFunctionKey ]
   properties: { format: 'rawxml', value: mcpBaselinePolicy }
 }
 
@@ -314,14 +304,14 @@ resource sleighTool 'Microsoft.ApiManagement/service/apis/tools@2025-09-01-previ
 resource naughtyNiceMcpPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: naughtyNiceMcp
   name: 'policy'
-  dependsOn: [ fragMcpBase, nvFunctionKey ]
+  dependsOn: [ fragAuth, nvFunctionKey ]
   properties: { format: 'rawxml', value: mcpBaselinePolicy }
 }
 
 resource sleighMcpPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: sleighMcp
   name: 'policy'
-  dependsOn: [ fragMcpBase, nvFunctionKey ]
+  dependsOn: [ fragAuth, nvFunctionKey ]
   properties: { format: 'rawxml', value: mcpBaselinePolicy }
 }
 
@@ -349,7 +339,7 @@ resource existingMcp 'Microsoft.ApiManagement/service/apis@2025-09-01-preview' =
 resource existingMcpPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: existingMcp
   name: 'policy'
-  dependsOn: [ fragMcpBase, nvMcpKey ]
+  dependsOn: [ fragAuth, nvMcpKey ]
   properties: { format: 'rawxml', value: mcpExistingBaselinePolicy }
 }
 
