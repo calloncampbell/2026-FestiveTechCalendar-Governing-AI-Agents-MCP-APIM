@@ -107,7 +107,7 @@ components:
         slotId: { type: string, example: NAE-2 }
         region: { type: string }
         date: { type: string, example: "2026-12-24" }
-        window: { type: string, example: 22:00-00:00 local }
+        window: { type: string, example: "22:00-00:00 local" }
         capacity: { type: integer }
     SlotList:
       type: object
