@@ -329,9 +329,11 @@ resource existingMcp 'Microsoft.ApiManagement/service/apis@2025-09-01-preview' =
     subscriptionRequired: keyMode
     mcpProperties: {
       transportType: 'streamable'
-      endpoints: [
-        { name: 'mcp', uriTemplate: '/mcp' }
-      ]
+      // The live service deserializes endpoints as an object keyed by endpoint name, although the
+      // published Bicep type (and Learn samples) show an array. Streamable transport needs one 'message' endpoint.
+      endpoints: any({
+        message: { uriTemplate: '/mcp' }
+      })
     }
   }
 }
